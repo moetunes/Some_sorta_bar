@@ -105,8 +105,8 @@ int main(int argc, char ** argv){
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
-    XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
-    XMapWindow(dis, barwin);
+    //XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
+    XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
     while(1){
         XNextEvent(dis, &ev);
@@ -119,19 +119,3 @@ int main(int argc, char ** argv){
 
     return (0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
