@@ -1,3 +1,5 @@
 some_sorta_bar
 A simple bar to display the root window name for lightweight window managers.
 Colours are set at compile time so edit them to suit.
+Font is set at compile time and the height of the bar is relevant to the font height.
+The window manager might need it's space for a bar adjusted.
