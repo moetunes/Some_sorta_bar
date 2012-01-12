@@ -1,2 +1,3 @@
 some_sorta_bar
 A simple bar to display the root window name for lightweight window managers.
+Colours are set at compile time so edit them to suit.
