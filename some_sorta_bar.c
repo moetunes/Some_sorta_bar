@@ -5,9 +5,8 @@
 #include <X11/Xatom.h>
 #include <signal.h>
 
-// uncomment the XSetTransientForHint line near the end to have the wm not resize the window for tests
 // colours are background then eight for the text
-static const char *defaultcolor[] = { "#003040", "#555544", "#009921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
+static const char *defaultcolor[] = { "#003040", "#667722", "#009921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
 static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
 
 typedef struct {
@@ -96,7 +95,7 @@ int main(int argc, char ** argv){
         theme[i].color = getcolor(defaultcolor[i]);
     XGCValues values;
 
-    printf(" \033[0;33mStatus Bar called ...\n");
+    //printf(" \033[0;33mStatus Bar called ...\n");
     for(i=1;i<9;i++) {
         values.foreground = theme[i].color;
         values.line_width = 2;
@@ -106,7 +105,7 @@ int main(int argc, char ** argv){
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
-    XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
+    //XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
