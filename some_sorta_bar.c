@@ -7,7 +7,7 @@
 
 // uncomment the XSetTransientForHint line near the end to have the wm not resize the window for tests
 // colours are background then eight for the text
-static const char *defaultcolor[] = { "#003040", "#ff0000", "#0000ff", "#000000", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
+static const char *defaultcolor[] = { "#003040", "#555544", "#009921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
 static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
 
 typedef struct {
@@ -77,6 +77,7 @@ void propertynotify(XEvent *e) {
 int main(int argc, char ** argv){
     int i;
     XEvent ev;
+    XSetWindowAttributes attr; attr.override_redirect = True;
 
     /* First connect to the display server, as specified in the DISPLAY environment variable. */
     dis = XOpenDisplay(NULL);
@@ -87,7 +88,7 @@ int main(int argc, char ** argv){
     sw = XDisplayWidth(dis,screen);
     fontbar = XLoadQueryFont(dis, fontbarname);
     if (!fontbar) {
-        fprintf(stderr,"\033[0;34m :: snapwm :\033[0;31m unable to load preferred fontbar: %s using fixed", fontbarname);
+        fprintf(stderr,"\033[0;34m :: some_sorta_bar :\033[0;31m unable to load preferred font: %s using fixed", fontbarname);
         fontbar = XLoadQueryFont(dis, "fixed");
     }
     height = fontbar->ascent+fontbar->descent+2;
@@ -105,7 +106,8 @@ int main(int argc, char ** argv){
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
-    //XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
+    XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
+    XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
     while(1){

@@ -8,3 +8,6 @@ e.g. To use the first and last colours mark the text like -
 .
 Font is set at compile time and the height of the bar is relevant to the font height.
 The window manager might need it's space for a bar adjusted.
+
+The bar has the override redirect flag set to true so it can be rebuilt and started again
+without the wm trying to map it.
