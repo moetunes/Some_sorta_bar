@@ -37,7 +37,6 @@ void update_output() {
     }
     XFree(win_name);
 
-    XClearArea(dis, barwin,0,0,0,0, False);
     if(strlen(output) > 255) text_length = 255;
     else text_length = strlen(output);
     for(i=0;i<text_length;i++) {
@@ -45,13 +44,20 @@ void update_output() {
         if(strncmp(&output[i], "&", 1) == 0)
             i += 2;
     }
+    int text_start = 2+((sw/2)-(XTextWidth(fontbar, " ",m/2)));
+    int text_space = text_start/XTextWidth(fontbar, " ", 1);
+    for (i=1;i<text_space+1; i++)
+        XDrawImageString(dis, barwin, theme[1].gc, 0+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
+    int text_end = ((sw/2)+(XTextWidth(fontbar, " ",m/2)));
+    for (i=1;i<text_space; i++)
+        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
     for(i=0;i<text_length;i++) {
         k++;
         if(strncmp(&output[i], "&", 1) == 0) {
             j = output[i+1]-'0';
             i += 2;
         }
-        XDrawString(dis, barwin, theme[j].gc, ((sw/2)-(XTextWidth(fontbar, " ",m/2)))+XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
+        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
     }
     output[0] ='\0';
     return;
@@ -97,11 +103,12 @@ int main(int argc, char ** argv){
 
     //printf(" \033[0;33mStatus Bar called ...\n");
     for(i=1;i<9;i++) {
+        values.background = theme[0].color;
         values.foreground = theme[i].color;
         values.line_width = 2;
         values.line_style = LineSolid;
         values.font = fontbar->fid;
-        theme[i].gc = XCreateGC(dis, root, GCForeground|GCLineWidth|GCLineStyle|GCFont,&values);
+        theme[i].gc = XCreateGC(dis, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle|GCFont,&values);
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
