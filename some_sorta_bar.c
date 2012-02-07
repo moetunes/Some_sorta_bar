@@ -46,7 +46,7 @@ void update_output() {
     }
     int text_start = 2+((sw/2)-(XTextWidth(fontbar, " ",m/2)));
     int text_space = text_start/XTextWidth(fontbar, " ", 1);
-    for (i=1;i<text_space+2; i++)
+    for (i=text_space+1;i>0;i--)
         XDrawImageString(dis, barwin, theme[1].gc, 0+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
     int text_end = ((sw/2)+(XTextWidth(fontbar, " ",m/2)));
     for (i=1;i<text_space; i++)
