@@ -112,7 +112,6 @@ int main(int argc, char ** argv){
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
-    //XSetTransientForHint(dis, barwin, DefaultRootWindow(dis));
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
