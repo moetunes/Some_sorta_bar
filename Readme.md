@@ -25,6 +25,8 @@ To change the colour mark the text with an ampersand and the desired colour numb
 
 Font is set at compile time and the height of the bar is relevant to the font height.
 
+Alignment is set at compile time and can be left, center or right.
+
 *The window manager might need it's space for a bar adjusted.*
 
 The bar has the override redirect flag set to true so it can be rebuilt and started again without the wm trying to map it.
