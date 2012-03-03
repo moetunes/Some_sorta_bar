@@ -14,6 +14,12 @@ or
 >		sleep 1m
 >	done &
 
+###Alignment is set in the text by marking the start with an ampersand and L, C or R
+
+**e.g.** To have the text right aligned
+
+&R some text here.
+
 ###Colours are set at compile time so edit them to suit.
 The first colour is the background and the following eight are for the text.
 
@@ -21,11 +27,9 @@ To change the colour mark the text with an ampersand and the desired colour numb
 
 **e.g.** To use the first and last colours mark the text like -
 
-&0 some text &7 some more text.
+&R&0 some text &7 some more text.
 
 Font is set at compile time and the height of the bar is relevant to the font height.
-
-Alignment is set at compile time and can be left, center or right.
 
 *The window manager might need it's space for a bar adjusted.*
 
