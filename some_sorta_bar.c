@@ -45,13 +45,19 @@ void update_output() {
     }
     XFree(win_name);
 
-    if(strlen(output) > 255) text_length = 255;
+    if(strlen(output) > 256) text_length = 256;
     else text_length = strlen(output);
     for(i=0;i<text_length;i++) { // Find the legth of text without markers
         m++;
         if(strncmp(&output[i], "&", 1) == 0)
             i += 2;
     }
+    if(m % 2 != 0) {
+        output[strlen(output)] = ' ';
+        m += 1;
+        text_length = strlen(output);
+    }
+    //printf("\t t_l == %d\n", text_length);
     for(i=0;i<text_length;i++) {
         if(strncmp(&output[i], "&", 1) == 0) {
             if(strncmp(&output[i+1], "L", 1) == 0) align_left();
@@ -69,6 +75,8 @@ void align_left() {
             if(strncmp(&output[i+1], "L", 1) == 0) {
                 i += 1;
                 continue;
+            } else if(strncmp(&output[i+1], "C", 1) == 0) {
+                align_center();
             }
             j = output[i+1]-'0';
             i += 2;
@@ -76,18 +84,18 @@ void align_left() {
         k++;
         XDrawImageString(dis, barwin, theme[j].gc, XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
     }
-    text_end = XTextWidth(fontbar, " ", k);
+    text_end = XTextWidth(fontbar, " ", m-1);
     text_space = sw-text_end;
-   for(i=0;i<text_space;i++)
+    for(i=0;i<text_space;i++)
         XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
     output[0] ='\0';
-    return;
+    //return;
 }
 
 void align_center() {
     text_start = (sw/2)-(XTextWidth(fontbar, " ",m)/2);
     text_space = text_start/XTextWidth(fontbar, " ", 1); /* pixel width of text */
-    for (i=0;i<text_space;i++)
+    for (i=0;i<=text_space;i++)
         XDrawImageString(dis, barwin, theme[1].gc, text_start-XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
     for(i=0;i<text_length;i++) {
         if(strncmp(&output[i], "&", 1) == 0) {
@@ -102,10 +110,10 @@ void align_center() {
         XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
     }
     text_end = text_start + XTextWidth(fontbar, " ",m-1);
-    for (i=0;i<text_space; i++)
+    for (i=1;i<text_space; i++)
         XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
     output[0] ='\0';
-    return;
+    //return;
 }
 
 void align_right() {
@@ -126,7 +134,7 @@ void align_right() {
         XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
     }
     output[0] ='\0';
-    return;
+    //return;
 }
 
 unsigned long getcolor(const char* color) {
@@ -148,7 +156,7 @@ void propertynotify(XEvent *e) {
 int main(int argc, char ** argv){
     int i;
     XEvent ev;
-    XSetWindowAttributes attr; attr.override_redirect = True;
+    XSetWindowAttributes attr;
 
     /* First connect to the display server, as specified in the DISPLAY environment variable. */
     dis = XOpenDisplay(NULL);
@@ -178,7 +186,8 @@ int main(int argc, char ** argv){
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
-    XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
+    attr.override_redirect = True; attr.save_under = True;
+    XChangeWindowAttributes(dis, barwin, CWOverrideRedirect|CWSaveUnder, &attr);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
     while(1){
