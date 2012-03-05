@@ -5,12 +5,14 @@
 #include <X11/Xatom.h>
 #include <signal.h>
 
+#define BAR_HEIGHT 16
+
 // colours are background then eight for the text
 static const char *defaultcolor[] = { "#003040", "#77aa99", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
 // If font isn't found "fixed" will be used
 static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
 
-static int i, j, k, m;
+static int i, j, k, m, fh;
 static int text_length, text_start, text_space, text_end;
 static char output[256];
 
@@ -57,7 +59,6 @@ void update_output() {
         m += 1;
         text_length = strlen(output);
     }
-    //printf("\t t_l == %d\n", text_length);
     for(i=0;i<text_length;i++) {
         if(strncmp(&output[i], "&", 1) == 0) {
             if(strncmp(&output[i+1], "L", 1) == 0) align_left();
@@ -82,12 +83,12 @@ void align_left() {
             i += 2;
         }
         k++;
-        XDrawImageString(dis, barwin, theme[j].gc, XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
+        XDrawImageString(dis, barwin, theme[j].gc, XTextWidth(fontbar, " ", k), fh, &output[i], 1);
     }
     text_end = XTextWidth(fontbar, " ", m-1);
     text_space = sw-text_end;
     for(i=0;i<text_space;i++)
-        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
+        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fh, " ", 1);
     output[0] ='\0';
     //return;
 }
@@ -96,7 +97,7 @@ void align_center() {
     text_start = (sw/2)-(XTextWidth(fontbar, " ",m)/2);
     text_space = text_start/XTextWidth(fontbar, " ", 1); /* pixel width of text */
     for (i=0;i<=text_space;i++)
-        XDrawImageString(dis, barwin, theme[1].gc, text_start-XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
+        XDrawImageString(dis, barwin, theme[1].gc, text_start-XTextWidth(fontbar, " ", i), fh, " ", 1);
     for(i=0;i<text_length;i++) {
         if(strncmp(&output[i], "&", 1) == 0) {
             if(strncmp(&output[i+1], "C", 1) == 0) {
@@ -107,11 +108,11 @@ void align_center() {
             i += 2;
         }
         k++;
-        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
+        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fh, &output[i], 1);
     }
     text_end = text_start + XTextWidth(fontbar, " ",m-1);
     for (i=1;i<text_space; i++)
-        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
+        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fh, " ", 1);
     output[0] ='\0';
     //return;
 }
@@ -120,7 +121,7 @@ void align_right() {
     text_start = sw-XTextWidth(fontbar, " ",m);
     text_space = text_start/XTextWidth(fontbar, " ", 1); /* pixel width of text */
     for (i=text_space+1;i>0;i--)
-        XDrawImageString(dis, barwin, theme[1].gc, 0+XTextWidth(fontbar, " ", i), fontbar->ascent+1, " ", 1);
+        XDrawImageString(dis, barwin, theme[1].gc, 0+XTextWidth(fontbar, " ", i), fh, " ", 1);
     for(i=0;i<text_length;i++) {
         if(strncmp(&output[i], "&", 1) == 0) {
             if(strncmp(&output[i+1], "R", 1) == 0) {
@@ -131,7 +132,7 @@ void align_right() {
             i += 2;
         }
         k++;
-        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fontbar->ascent+1, &output[i], 1);
+        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fh, &output[i], 1);
     }
     output[0] ='\0';
     //return;
@@ -154,7 +155,7 @@ void propertynotify(XEvent *e) {
 }
 
 int main(int argc, char ** argv){
-    int i;
+    int i, font_height;
     XEvent ev;
     XSetWindowAttributes attr;
 
@@ -170,7 +171,10 @@ int main(int argc, char ** argv){
         fprintf(stderr,"\033[0;34m :: some_sorta_bar :\033[0;31m unable to load preferred font: %s using fixed", fontbarname);
         fontbar = XLoadQueryFont(dis, "fixed");
     }
-    height = fontbar->ascent+fontbar->descent+2;
+    font_height = fontbar->ascent+fontbar->descent+2;
+    if(BAR_HEIGHT > font_height) height = BAR_HEIGHT;
+    else height = font_height;
+    fh = ((height - font_height)/2) + fontbar->ascent + 1;
     for(i=0;i<9;i++)
         theme[i].color = getcolor(defaultcolor[i]);
     XGCValues values;

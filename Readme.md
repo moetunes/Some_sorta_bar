@@ -29,7 +29,10 @@ To change the colour mark the text with an ampersand and the desired colour numb
 
 &R&0 some text &7 some more text.
 
-Font is set at compile time and the height of the bar is relevant to the font height.
+The height of the bar can be set at compile time.
+
+Font is set at compile time and the height of the bar is relevant to the font height 
+if the bar height is too small.
 
 *The window manager might need it's space for a bar adjusted.*
 
