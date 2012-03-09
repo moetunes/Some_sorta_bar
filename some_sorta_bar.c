@@ -7,24 +7,23 @@
 
 #define BAR_HEIGHT 16
 
-// colours are background then eight for the text
-static const char *defaultcolor[] = { "#003040", "#77aa99", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
-// If font isn't found "fixed" will be used
-static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
-
-static int i, j, k, m, fh;
-static int text_length, text_start, text_space, text_end;
-static char output[256];
-
 typedef struct {
     unsigned long color;
     GC gc;
 } Theme;
 static Theme theme[9];
 
-static void align_left();
-static void align_center();
-static void align_right();
+static void print_text();
+
+// colours are background then eight for the text
+static const char *defaultcolor[] = { "#003040", "#77aa99", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
+// If font isn't found "fixed" will be used
+static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
+
+static int i, j, k, fl, fh; // fl is filtered length of text, fh is height for font
+static int text_length, c_start, c_end, r_start;
+static int total_w, l_length, c_length, r_length, do_l, do_c, do_r;
+static char output[256];
 
 static Display *dis;
 static int sw;
@@ -35,7 +34,9 @@ static Window root;
 static Window barwin;
 
 void update_output() {
-    j=2, k=0, m=0;
+    j=2; k=0; fl=0;
+    do_l =0; do_c = 0; do_r = 0;
+    l_length = 0; c_length = 0; r_length = 0;
     char *win_name;
 
     if(!(XFetchName(dis, root, &win_name))) {
@@ -50,92 +51,60 @@ void update_output() {
     if(strlen(output) > 256) text_length = 256;
     else text_length = strlen(output);
     for(i=0;i<text_length;i++) { // Find the legth of text without markers
-        m++;
-        if(strncmp(&output[i], "&", 1) == 0)
+        while(strncmp(&output[i], "&", 1) == 0) {
+            if(strncmp(&output[i+1], "L", 1) == 0) do_l = 1;
+            else if(strncmp(&output[i+1], "C", 1) == 0) {
+                do_c = 1;
+                if(do_l == 1) l_length = fl;
+            }
+            else if(strncmp(&output[i+1], "R", 1) == 0) {
+                do_r = 1;
+                if(do_c == 1) c_length = fl - l_length;
+                else if(do_l == 1) l_length = fl;
+            }
             i += 2;
-    }
-    if(m % 2 != 0) {
-        output[strlen(output)] = ' ';
-        m += 1;
-        text_length = strlen(output);
-    }
-    for(i=0;i<text_length;i++) {
-        if(strncmp(&output[i], "&", 1) == 0) {
-            if(strncmp(&output[i+1], "L", 1) == 0) align_left();
-            else if(strncmp(&output[i+1], "R", 1) == 0) align_right();
-            else align_center();
-            break;
         }
+        fl++;
     }
+    if(do_l != 1 && do_c != 1 && do_r != 1) do_c = 1;
+    if(do_r == 1) r_length = fl - l_length - c_length;
+    if(do_c == 1 && c_length == 0) c_length = fl - l_length - r_length;
+    //if(c_length % 2 != 0) c_length += 1;
+    if(do_l == 1 && l_length == 0) l_length = fl - c_length - r_length;
+    c_start = ((sw/XTextWidth(fontbar, " ", 1)) - c_length)/2;
+    c_end = (c_start + c_length);
+    r_start = (sw/XTextWidth(fontbar, " ", 1)) - r_length;
+    total_w = sw/XTextWidth(fontbar, " ", 1);
+    //printf("\t cs == %d - ce == %d - rs == %d - tw == %d\n", c_start,c_end,r_start,total_w);
+    //printf("\t ll = %d - cl = %d - rl = %d - fl = %d - textl = %d\n", l_length, c_length, r_length, fl, text_length);
+    for(i=1;i<total_w;i++) {
+        if(do_r == 1 && i >= r_start) print_text();
+        else if(do_c == 1 && i > c_end)
+            XDrawImageString(dis, barwin, theme[1].gc, XTextWidth(fontbar, " ", i), fh, " ", 1);
+        else if(do_c == 1 && i > c_start) print_text();
+        else if(i > l_length)
+            XDrawImageString(dis, barwin, theme[1].gc, XTextWidth(fontbar, " ", i), fh, " ", 1);
+        else if(do_l == 1) print_text();
+    }
+
     return;
 }
 
-void align_left() {
-    for(i=0;i<text_length;i++) {
-        if(strncmp(&output[i], "&", 1) == 0) {
-            if(strncmp(&output[i+1], "L", 1) == 0) {
-                i += 1;
-                continue;
-            } else if(strncmp(&output[i+1], "C", 1) == 0) {
-                align_center();
-            }
-            j = output[i+1]-'0';
-            i += 2;
+void print_text() {
+    while(strncmp(&output[k], "&", 1) == 0) {
+        if(strncmp(&output[k+1], "L", 1) == 0) {
+            k += 2;
+        } else if(strncmp(&output[k+1], "C", 1) == 0) {
+            k += 2;
+        } else if(strncmp(&output[k+1], "R", 1) == 0) {
+            k += 2;
+        } else {
+            j = output[k+1]-'0';
+            k += 2;
         }
-        k++;
-        XDrawImageString(dis, barwin, theme[j].gc, XTextWidth(fontbar, " ", k), fh, &output[i], 1);
     }
-    text_end = XTextWidth(fontbar, " ", m-1);
-    text_space = sw-text_end;
-    for(i=0;i<text_space;i++)
-        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fh, " ", 1);
-    output[0] ='\0';
-    //return;
-}
-
-void align_center() {
-    text_start = (sw/2)-(XTextWidth(fontbar, " ",m)/2);
-    text_space = text_start/XTextWidth(fontbar, " ", 1); /* pixel width of text */
-    for (i=0;i<=text_space;i++)
-        XDrawImageString(dis, barwin, theme[1].gc, text_start-XTextWidth(fontbar, " ", i), fh, " ", 1);
-    for(i=0;i<text_length;i++) {
-        if(strncmp(&output[i], "&", 1) == 0) {
-            if(strncmp(&output[i+1], "C", 1) == 0) {
-                i += 1;
-                continue;
-            }
-            j = output[i+1]-'0';
-            i += 2;
-        }
-        k++;
-        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fh, &output[i], 1);
-    }
-    text_end = text_start + XTextWidth(fontbar, " ",m-1);
-    for (i=1;i<text_space; i++)
-        XDrawImageString(dis, barwin, theme[1].gc, text_end+XTextWidth(fontbar, " ", i), fh, " ", 1);
-    output[0] ='\0';
-    //return;
-}
-
-void align_right() {
-    text_start = sw-XTextWidth(fontbar, " ",m);
-    text_space = text_start/XTextWidth(fontbar, " ", 1); /* pixel width of text */
-    for (i=text_space+1;i>0;i--)
-        XDrawImageString(dis, barwin, theme[1].gc, 0+XTextWidth(fontbar, " ", i), fh, " ", 1);
-    for(i=0;i<text_length;i++) {
-        if(strncmp(&output[i], "&", 1) == 0) {
-            if(strncmp(&output[i+1], "R", 1) == 0) {
-                i += 1;
-                continue;
-            }
-            j = output[i+1]-'0';
-            i += 2;
-        }
-        k++;
-        XDrawImageString(dis, barwin, theme[j].gc, text_start+XTextWidth(fontbar, " ", k), fh, &output[i], 1);
-    }
-    output[0] ='\0';
-    //return;
+    XDrawImageString(dis, barwin, theme[j].gc, XTextWidth(fontbar, " ", i), fh, &output[k], 1);
+    k++;
 }
 
 unsigned long getcolor(const char* color) {
@@ -168,7 +137,7 @@ int main(int argc, char ** argv){
     sw = XDisplayWidth(dis,screen);
     fontbar = XLoadQueryFont(dis, fontbarname);
     if (!fontbar) {
-        fprintf(stderr,"\033[0;34m :: some_sorta_bar :\033[0;31m unable to load preferred font: %s using fixed", fontbarname);
+        fprintf(stderr,"\033[0;34m :: simbar :\033[0;31m unable to load preferred font: %s using fixed", fontbarname);
         fontbar = XLoadQueryFont(dis, "fixed");
     }
     font_height = fontbar->ascent+fontbar->descent+2;

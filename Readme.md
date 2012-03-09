@@ -20,6 +20,10 @@ or
 
 &R some text here.
 
+**or** To have some text centered and some on the right
+
+&C some text &R some more text
+
 ###Colours are set at compile time so edit them to suit.
 The first colour is the background and the following eight are for the text.
 
