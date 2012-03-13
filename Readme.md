@@ -18,11 +18,11 @@ or
 
 *e.g.* To have the text right aligned
 
-** *&R* some text on the right.**
+***&R* some text on the right.**
 
 *or* To have some text centered and some on the right
 
-** *&C* some centered text *&R* some more text on the right**
+***&C* some centered text *&R* some more text on the right**
 
 ###Colours are set at compile time so edit them to suit.
 
@@ -42,7 +42,7 @@ Whether the bar is at *top or bottom* is set at compile time.
 
 The height of the bar can be set at compile time.
 
-**#define BAR_HEIGHT *16* **
+**#define BAR_HEIGHT *16***
 
 Font is set at compile time and the height of the bar is relevant to the font height 
 if the bar height is too small.
