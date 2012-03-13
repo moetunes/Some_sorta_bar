@@ -7,12 +7,12 @@
 
 or
 
->	while true ; do
+>	  while true ; do
 
 >		xsetroot -name "$(awk 'sub(/,/,"") {print $3, $4}' <(acpi -b))"
 
 >		sleep 1m
->	done &
+>	  done &
 
 ###Alignment is set in the text by marking the start with an ampersand and L, C or R
 
