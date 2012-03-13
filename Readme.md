@@ -25,17 +25,17 @@ or
 
 ***&C* some centered text *&R* some more text on the right**
 
-###Colours are set at compile time so edit them to suit.
+###The nine colours are set at compile time so edit them to suit.
 
 **static const char *defaultcolor[] = { "#003040", "#77aa99", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };**
 
-The first colour is the background and the following eight are for the text.
+The first colour is the background and the second to ninth are for the text.
 
 To change the colour mark the text with an ampersand and the desired colour number.
 
-*e.g.* To use the first and last colours mark the text like -
+*e.g.* To use the second and last colours, mark the text like -
 
-**&R*&0* some text *&7* some more text.**
+**&R*&2* some text *&9* some more text**
 
 Whether the bar is at *top or bottom* is set at compile time.
 

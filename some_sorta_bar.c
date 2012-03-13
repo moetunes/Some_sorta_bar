@@ -6,19 +6,19 @@
 #include <X11/Xatom.h>
 #include <signal.h>
 
-#define TOP_BAR 1        // 0=Bar at top, 1=Bar at bottom
+#define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
 
 typedef struct {
     unsigned long color;
     GC gc;
 } Theme;
-static Theme theme[9];
+static Theme theme[10];
 
 static void print_text();
 
 // colours are background then eight for the text
-static const char *defaultcolor[] = { "#003040", "#77aa99", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };
+static const char *defaultcolor[] = { "#003040", "#ff0000", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#00ff00", };
 // If font isn't found "fixed" will be used
 static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
 
@@ -103,6 +103,8 @@ void print_text() {
             k += 2;
         } else {
             j = output[k+1]-'0';
+            if(j > 1 || j < 10) j--;
+            else j = 2;
             k += 2;
         }
     }
