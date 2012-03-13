@@ -14,7 +14,7 @@ or
 >		sleep 1m
 >	  done &
 
-###Alignment is set in the text by marking the start with an ampersand and L, C or R
+###Text can be aligned in blocks and alignment is set in the text by marking the *start* and *where it is to be split* with an ampersand and L, C or R
 
 *e.g.* To have the text right aligned
 
