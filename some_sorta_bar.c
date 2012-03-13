@@ -1,3 +1,4 @@
+/* simbar.c */
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <locale.h>
@@ -5,6 +6,7 @@
 #include <X11/Xatom.h>
 #include <signal.h>
 
+#define TOP_BAR 1        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
 
 typedef struct {
@@ -27,6 +29,7 @@ static char output[256];
 
 static Display *dis;
 static int sw;
+static int sh;
 static int height;
 static int screen;
 static XFontStruct *fontbar;
@@ -124,7 +127,7 @@ void propertynotify(XEvent *e) {
 }
 
 int main(int argc, char ** argv){
-    int i, font_height;
+    int i, font_height, y = 0;
     XEvent ev;
     XSetWindowAttributes attr;
 
@@ -135,6 +138,7 @@ int main(int argc, char ** argv){
     root = DefaultRootWindow(dis);
     screen = DefaultScreen(dis);
     sw = XDisplayWidth(dis,screen);
+    sh = XDisplayHeight(dis,screen);
     fontbar = XLoadQueryFont(dis, fontbarname);
     if (!fontbar) {
         fprintf(stderr,"\033[0;34m :: simbar :\033[0;31m unable to load preferred font: %s using fixed", fontbarname);
@@ -143,6 +147,7 @@ int main(int argc, char ** argv){
     font_height = fontbar->ascent+fontbar->descent+2;
     if(BAR_HEIGHT > font_height) height = BAR_HEIGHT;
     else height = font_height;
+    if (TOP_BAR != 0) y = sh - height;
     fh = ((height - font_height)/2) + fontbar->ascent + 1;
     for(i=0;i<9;i++)
         theme[i].color = getcolor(defaultcolor[i]);
@@ -158,7 +163,7 @@ int main(int argc, char ** argv){
         theme[i].gc = XCreateGC(dis, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle|GCFont,&values);
     }
 
-    barwin = XCreateSimpleWindow(dis, root, 0, 0, sw, height, 1, theme[0].color,theme[0].color);
+    barwin = XCreateSimpleWindow(dis, root, 0, y, sw, height, 1, theme[0].color,theme[0].color);
     attr.override_redirect = True; attr.save_under = True;
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect|CWSaveUnder, &attr);
     XMapRaised(dis, barwin);
