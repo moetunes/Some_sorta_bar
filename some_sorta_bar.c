@@ -20,7 +20,7 @@ static void print_text();
 // colours are background then eight for the text
 static const char *defaultcolor[] = { "#003040", "#ff0000", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#00ff00", };
 // If font isn't found "fixed" will be used
-static const char *fontbarname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
+static const char *fontname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
 
 static int i, j, k, fl, fh; // fl is filtered length of text, fh is height for font
 static int text_length, c_start, c_end, r_start;
@@ -72,7 +72,6 @@ void update_output() {
     if(do_l != 1 && do_c != 1 && do_r != 1) do_c = 1;
     if(do_r == 1) r_length = fl - l_length - c_length;
     if(do_c == 1 && c_length == 0) c_length = fl - l_length - r_length;
-    //if(c_length % 2 != 0) c_length += 1;
     if(do_l == 1 && l_length == 0) l_length = fl - c_length - r_length;
     c_start = ((sw/XTextWidth(fontbar, " ", 1)) - c_length)/2;
     c_end = (c_start + c_length);
@@ -141,9 +140,9 @@ int main(int argc, char ** argv){
     screen = DefaultScreen(dis);
     sw = XDisplayWidth(dis,screen);
     sh = XDisplayHeight(dis,screen);
-    fontbar = XLoadQueryFont(dis, fontbarname);
+    fontbar = XLoadQueryFont(dis, fontname);
     if (!fontbar) {
-        fprintf(stderr,"\033[0;34m :: simbar :\033[0;31m unable to load preferred font: %s using fixed", fontbarname);
+        fprintf(stderr,"\033[0;34m :: simbar :\033[0;31m unable to load preferred font: %s using fixed", fontname);
         fontbar = XLoadQueryFont(dis, "fixed");
     }
     font_height = fontbar->ascent+fontbar->descent+2;
