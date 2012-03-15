@@ -1,4 +1,3 @@
-/* simbar.c */
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <locale.h>
@@ -167,14 +166,18 @@ int main(int argc, char ** argv){
     barwin = XCreateSimpleWindow(dis, root, 0, y, sw, height, 1, theme[0].color,theme[0].color);
     attr.override_redirect = True; attr.save_under = True;
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect|CWSaveUnder, &attr);
+    XSelectInput(dis,barwin,ExposureMask);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
     while(1){
         XNextEvent(dis, &ev);
         switch(ev.type){
-        case PropertyNotify:
-            propertynotify(&ev);
-            break;
+            case PropertyNotify:
+                propertynotify(&ev);
+                break;
+            case Expose:
+                update_output();
+                break;
         }
     }
 
