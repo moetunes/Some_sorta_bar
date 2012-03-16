@@ -46,7 +46,7 @@ void update_output() {
         first_run += 1;
         if(first_run < 2) {
             strcpy(output, "What's going on here then?");
-            printf("\033[0;31m Failed to get status output.\n  \033[0 \n");
+            printf("\033[0;31m Failed to get status output.\n  \033[0:m \n");
         }
     } else {
         strncpy(output, win_name, strlen(win_name));
