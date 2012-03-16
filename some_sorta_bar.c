@@ -39,11 +39,15 @@ void update_output() {
     j=2; k=0; fl=0;
     do_l =0; do_c = 0; do_r = 0;
     l_length = 0; c_length = 0; r_length = 0;
+    int  first_run;
     char *win_name;
 
     if(!(XFetchName(dis, root, &win_name))) {
-        strcpy(output, "What's going on here then?");
-            printf("\033[0;31m Failed to get status output. \n");
+        first_run += 1;
+        if(first_run < 2) {
+            strcpy(output, "What's going on here then?");
+            printf("\033[0;31m Failed to get status output.\n  \033[0 \n");
+        }
     } else {
         strncpy(output, win_name, strlen(win_name));
         output[strlen(win_name)] = '\0';
