@@ -44,10 +44,10 @@ void update_output() {
 
     if(!(XFetchName(dis, root, &win_name))) {
         first_run += 1;
-        if(first_run < 2) {
+        if(first_run > 1) {
             strcpy(output, "What's going on here then?");
             printf("\033[0;31m Failed to get status output.\n  \033[0:m \n");
-        }
+        } else printf("\tSSB :: Must be starting\n");
     } else {
         strncpy(output, win_name, strlen(win_name));
         output[strlen(win_name)] = '\0';
