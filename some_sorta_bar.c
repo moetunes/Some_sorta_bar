@@ -27,6 +27,7 @@ static int total_w, l_length, c_length, r_length, do_l, do_c, do_r;
 static char output[256];
 
 static Display *dis;
+static int first_run;
 static int sw;
 static int sh;
 static int height;
@@ -39,7 +40,6 @@ void update_output() {
     j=2; k=0; fl=0;
     do_l =0; do_c = 0; do_r = 0;
     l_length = 0; c_length = 0; r_length = 0;
-    int  first_run;
     char *win_name;
 
     if(!(XFetchName(dis, root, &win_name))) {
@@ -173,6 +173,7 @@ int main(int argc, char ** argv){
     XSelectInput(dis,barwin,ExposureMask);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
+    first_run = 0;
     while(1){
         XNextEvent(dis, &ev);
         switch(ev.type){
