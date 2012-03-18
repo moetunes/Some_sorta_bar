@@ -1,5 +1,6 @@
 #include <X11/Xlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <locale.h>
 #include <string.h>
 #include <X11/Xatom.h>
@@ -24,7 +25,7 @@ static const char *fontname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-
 static int i, j, k, fl, fh; // fl is filtered length of text, fh is height for font
 static int text_length, c_start, c_end, r_start;
 static int total_w, l_length, c_length, r_length, do_l, do_c, do_r;
-static char output[256];
+static char output[256] = {"What's going on here then?"};
 
 static Display *dis;
 static int first_run;
@@ -45,11 +46,12 @@ void update_output() {
     if(!(XFetchName(dis, root, &win_name))) {
         first_run += 1;
         if(first_run > 1) {
-            strcpy(output, "What's going on here then?");
             printf("\033[0;31m Failed to get status output.\n  \033[0:m \n");
         } else printf("\tSSB :: Must be starting\n");
     } else {
-        strncpy(output, win_name, strlen(win_name));
+        for(i=0;i<strlen(win_name);++i) {
+            output[i] = win_name[i];
+        }
         output[strlen(win_name)] = '\0';
     }
     XFree(win_name);
@@ -57,18 +59,25 @@ void update_output() {
     if(strlen(output) > 256) text_length = 256;
     else text_length = strlen(output);
     for(i=0;i<text_length;i++) { // Find the legth of text without markers
-        while(strncmp(&output[i], "&", 1) == 0) {
-            if(strncmp(&output[i+1], "L", 1) == 0) do_l = 1;
-            else if(strncmp(&output[i+1], "C", 1) == 0) {
+        while(output[i] == '&') {
+            if(output[i+1] == 'L') {
+                do_l = 1;
+                i += 2;
+            } else if(output[i+1] == 'C') {
                 do_c = 1;
                 if(do_l == 1) l_length = fl;
-            }
-            else if(strncmp(&output[i+1], "R", 1) == 0) {
+                i += 2;
+            } else if(output[i+1] == 'R') {
                 do_r = 1;
                 if(do_c == 1) c_length = fl - l_length;
                 else if(do_l == 1) l_length = fl;
+                i += 2;
+            } else if(output[i+1]-'0' < 10 && output[i+1]-'0' > 0) {
+                //printf("\t :: i+1 == %c\n", output[i+1]);
+                i += 2;
+            } else {
+                break;
             }
-            i += 2;
         }
         fl++;
     }
@@ -96,19 +105,20 @@ void update_output() {
 }
 
 void print_text() {
-    while(strncmp(&output[k], "&", 1) == 0) {
-        if(strncmp(&output[k+1], "L", 1) == 0) {
+    while(output[k] == '&') {
+        if(output[k+1] == 'L') {
             k += 2;
-        } else if(strncmp(&output[k+1], "C", 1) == 0) {
+        } else if(output[k+1] == 'C') {
             k += 2;
-        } else if(strncmp(&output[k+1], "R", 1) == 0) {
+        } else if(output[k+1] == 'R') {
             k += 2;
-        } else {
+        } else if(output[k+1]-'0' < 10 && output[k+1]-'0' > 0) {
             j = output[k+1]-'0';
-            if(j > 1 || j < 10) j--;
-            else j = 2;
+            if(j > 1 || j < 10) {
+                 j--;
+            } else  j = 2;
             k += 2;
-        }
+        } else break;
     }
     XDrawImageString(dis, barwin, theme[j].gc, XTextWidth(fontbar, " ", i), fh, &output[k], 1);
     k++;
@@ -135,7 +145,6 @@ int main(int argc, char ** argv){
     XEvent ev;
     XSetWindowAttributes attr;
 
-    /* First connect to the display server, as specified in the DISPLAY environment variable. */
     dis = XOpenDisplay(NULL);
     if (!dis) {fprintf(stderr, "unable to connect to display");return 7;}
 
@@ -157,7 +166,6 @@ int main(int argc, char ** argv){
         theme[i].color = getcolor(defaultcolor[i]);
     XGCValues values;
 
-    //printf(" \033[0;33mStatus Bar called ...\n");
     for(i=1;i<9;i++) {
         values.background = theme[0].color;
         values.foreground = theme[i].color;
@@ -168,8 +176,8 @@ int main(int argc, char ** argv){
     }
 
     barwin = XCreateSimpleWindow(dis, root, 0, y, sw, height, 1, theme[0].color,theme[0].color);
-    attr.override_redirect = True; attr.save_under = True;
-    XChangeWindowAttributes(dis, barwin, CWOverrideRedirect|CWSaveUnder, &attr);
+    attr.override_redirect = True;
+    XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
     XSelectInput(dis,barwin,ExposureMask);
     XMapRaised(dis, barwin);
     XSelectInput(dis,root,PropertyChangeMask);
