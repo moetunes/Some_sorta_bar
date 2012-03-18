@@ -8,6 +8,15 @@
 
 #define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
+#define colour1 "#003040"  // Background colour
+#define colour2 "#ff0000"  // The rest colour the text
+#define colour3 "#449921"
+#define colour4 "#00dd99"
+#define colour5 "#ffffff"
+#define colour6 "#ffff00"
+#define colour7 "#ff00ff"
+#define colour8 "#f0f0f0"
+#define colour9 "#00ff00"
 
 typedef struct {
     unsigned long color;
@@ -18,7 +27,7 @@ static Theme theme[10];
 static void print_text();
 
 // colours are background then eight for the text
-static const char *defaultcolor[] = { "#003040", "#ff0000", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#00ff00", };
+static const char *defaultcolor[] = { colour1, colour2, colour3, colour4, colour5, colour6, colour7, colour8, colour9, };
 // If font isn't found "fixed" will be used
 static const char *fontname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
 
