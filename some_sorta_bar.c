@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
-#include <string.h>
 #include <X11/Xatom.h>
 #include <signal.h>
 
 #define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
+#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*"
 #define colour1 "#003040"  // Background colour
 #define colour2 "#ff0000"  // The rest colour the text
 #define colour3 "#449921"
@@ -29,7 +29,7 @@ static void print_text();
 // colours are background then eight for the text
 static const char *defaultcolor[] = { colour1, colour2, colour3, colour4, colour5, colour6, colour7, colour8, colour9, };
 // If font isn't found "fixed" will be used
-static const char *fontname = "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*";
+static const char *fontname = FONT;
 
 static int i, j, k, fl, fh; // fl is filtered length of text, fh is height for font
 static int text_length, c_start, c_end, r_start;
@@ -49,7 +49,7 @@ static Window barwin;
 void update_output() {
     j=2; k=0; fl=0;
     do_l =0; do_c = 0; do_r = 0;
-    l_length = 0; c_length = 0; r_length = 0;
+    l_length = 0; c_length = 0; r_length = 0, text_length = 0;
     char *win_name;
 
     if(!(XFetchName(dis, root, &win_name))) {
@@ -58,15 +58,14 @@ void update_output() {
             printf("\033[0;31m Failed to get status output.\n  \033[0:m \n");
         } else printf("\tSSB :: Must be starting\n");
     } else {
-        for(i=0;i<strlen(win_name);++i) {
-            output[i] = win_name[i];
+        while(win_name[text_length] != '\0' && text_length < 256) {
+            output[text_length] = win_name[text_length];
+            ++text_length;
         }
-        output[strlen(win_name)] = '\0';
+        output[text_length] = '\0';
     }
     XFree(win_name);
 
-    if(strlen(output) > 256) text_length = 256;
-    else text_length = strlen(output);
     for(i=0;i<text_length;i++) { // Find the legth of text without markers
         while(output[i] == '&') {
             if(output[i+1] == 'L') {
@@ -82,7 +81,6 @@ void update_output() {
                 else if(do_l == 1) l_length = fl;
                 i += 2;
             } else if(output[i+1]-'0' < 10 && output[i+1]-'0' > 0) {
-                //printf("\t :: i+1 == %c\n", output[i+1]);
                 i += 2;
             } else {
                 break;
