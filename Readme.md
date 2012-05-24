@@ -25,9 +25,9 @@ or
 
 ***&C* some centered text *&R* some more text on the right**
 
-###The nine colours are set at compile time so edit them to suit.
+Text defaults to left alignment if not marked with either *&C* or *&R*
 
-**static const char *defaultcolor[] = { "#003040", "#77aa99", "#449921", "#00dd99", "#ffffff", "#ffff00", "#ff00ff", "#f0f0f0", "#0f0f0f", };**
+###The nine colours are set at compile time so edit them to suit.
 
 The first colour is the background and the second to ninth are for the text.
 
@@ -45,6 +45,7 @@ The height of the bar can be set at compile time.
 
 **#define BAR_HEIGHT *16*    //**
 
+Fonts used are defined in a comma seperated list.
 Font is set at compile time and the height of the bar is relevant to the font height 
 if the bar height is too small.
 
