@@ -13,8 +13,10 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
+#define TOP_BAR 1        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
+#define BAR_WIDTH 0      // 0=Full width or num pixels
+#define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
 // If font isn't found "fixed" will be used
 #define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*"
 #define FONTS_ERROR 1      // 0 to have missing fonts error shown
@@ -40,9 +42,9 @@ typedef struct {
     XFontSet fontset;           /* fontset structure */
     int height;                 /* height of the font */
     int width;
-    int fh;                      /* Y coordinate to draw characters */
-    int ascent;
-    int descent;
+    unsigned int fh;                      /* Y coordinate to draw characters */
+    unsigned int ascent;
+    unsigned int descent;
 } Iammanyfonts;
 
 static void get_font();
@@ -52,17 +54,18 @@ static int wc_size(char *string);
 static const char *defaultcolor[] = { colour1, colour2, colour3, colour4, colour5, colour6, colour7, colour8, colour9, };
 static const char *font_list = FONT;
 
-static int count, j, k;
-static int text_length, c_start, c_end, r_start;
-static int total_w, l_length, c_length, r_length;
+static unsigned int count, j, k;
+static unsigned int text_length, c_start, c_end, r_start;
+static unsigned int total_w, l_length, c_length, r_length;
 static char output[256] = {"What's going on here then?"};
 
 static Display *dis;
-static int first_run;
-static int sw;
-static int sh;
-static int height;
-static int screen;
+static unsigned int first_run;
+static unsigned int sw;
+static unsigned int sh;
+static unsigned int height;
+static unsigned int width;
+static unsigned int screen;
 static Window root;
 static Window barwin;
 
@@ -94,9 +97,8 @@ void get_font() {
 		}
 		XmbTextExtents(font.fontset, " ", 1, NULL, &rect);
 		font.width = rect.width;
-	}
-	else {
-		fprintf(stderr, "SSB :: %s Not Found\nSSB :: Trying Fixed\n", FONT);
+	} else {
+		fprintf(stderr, "SSB :: Font '%s' Not Found\nSSB :: Trying Font 'Fixed'\n", font_list);
 		if(!(font.font = XLoadQueryFont(dis, font_list))
 		&& !(font.font = XLoadQueryFont(dis, "fixed")))
 			fprintf(stderr, "SSB :: Error, cannot load font: '%s'\n", font_list);
@@ -110,7 +112,8 @@ void get_font() {
 void update_output() {
     j=2; k=0;
     l_length = 0; c_length = 0; r_length = 0, text_length = 0;
-    int n;
+    unsigned int n, blank_l = 0;
+    int bc = BAR_CENTER;
     ssize_t num;
     char win_name[256];
 
@@ -121,9 +124,9 @@ void update_output() {
     count = 0;
     text_length = strlen(output)-1;
     output[text_length] = '\0';
-    total_w = sw/font.width;
+    total_w = width/font.width;
     for(k=0;k<total_w;k++) {
-        if(count < text_length-1) {
+        if(count < text_length) {
             if(output[count] == '&' && output[count+1] == 'C') {
                 l_length = k;
                 for(n=count;n<text_length;n++) {
@@ -134,15 +137,21 @@ void update_output() {
                 }
                 win_name[c_length] = '\0';
                 c_length = wc_size(win_name);
-                c_start = (total_w/2 - c_length/2);
-                for(k=l_length;k<c_start;k++) {
-                    if(font.fontset)
-                        XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
-                    else
-                        XDrawImageString(dis, barwin, theme[1].gc, font.width, font.fh, " ", 1);
+                //printf("\t bc=%d\n", bc);
+                c_start = (total_w/2 - c_length/2)+(bc/font.width);
+                for(k=l_length;k<c_start+1;k++) {
+                     win_name[blank_l] = ' ';
+                     blank_l++;
                 }
+                k--;
+                win_name[blank_l] = '\0';
+                if(font.fontset)
+                    XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, l_length*font.width, font.fh, win_name, blank_l);
+                else
+                    XDrawImageString(dis, barwin, theme[1].gc, l_length*font.width, font.fh, win_name, blank_l);
             }
             if(output[count] == '&' && output[count+1] == 'R') {
+                blank_l = 0;
                 c_end = k;
                 for(n=count;n<text_length;n++) {
                     while(output[n] == '&') n += 2;
@@ -152,12 +161,16 @@ void update_output() {
                 win_name[r_length] = '\0';
                 r_length = wc_size(win_name);
                 r_start = total_w -r_length;
-                for(k=c_end;k<r_start;k++) {
-                    if(font.fontset)
-                        XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
-                    else
-                        XDrawImageString(dis, barwin, theme[1].gc, font.width, font.fh, " ", 1);
+                for(k=c_end;k<r_start+1;k++) {
+                     win_name[blank_l] = ' ';
+                     blank_l++;
                 }
+                k--;
+                win_name[blank_l] = '\0';
+                if(font.fontset)
+                    XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, c_end*font.width, font.fh, win_name, blank_l);
+                else
+                    XDrawImageString(dis, barwin, theme[1].gc, c_end*font.width, font.fh, win_name, blank_l);
             }
             print_text();
         } else {
@@ -186,7 +199,7 @@ int wc_size(char *string) {
 
 void print_text() {
     char astring[100];
-    int wsize, n=0;
+    unsigned int wsize, n=0;
 
     while(output[count] == '&') {
         if((output[count+1] == 'L') || (output[count+1] == 'C') || (output[count+1] == 'R')) {
@@ -227,7 +240,7 @@ unsigned long getcolor(const char* color) {
 }
 
 int main(int argc, char ** argv){
-    int i, y = 0;
+    unsigned int i, y = 0;
     XEvent ev;
     XSetWindowAttributes attr;
 	char *loc;
@@ -247,6 +260,8 @@ int main(int argc, char ** argv){
     if(BAR_HEIGHT > font.height) height = BAR_HEIGHT;
     else height = font.height+2;
     font.fh = ((height - font.height)/2) + font.ascent;
+    if(BAR_WIDTH == 0) width = sw;
+    else width = BAR_WIDTH;
     if (TOP_BAR != 0) y = sh - height;
 
     for(i=0;i<9;i++)
@@ -266,7 +281,7 @@ int main(int argc, char ** argv){
         }
     }
 
-    barwin = XCreateSimpleWindow(dis, root, 0, y, sw, height, 1, theme[0].color,theme[0].color);
+    barwin = XCreateSimpleWindow(dis, root, 0, y, width, height, 1, theme[0].color,theme[0].color);
     attr.override_redirect = True;
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
     XSelectInput(dis,barwin,ExposureMask);
