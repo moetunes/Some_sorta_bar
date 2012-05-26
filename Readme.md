@@ -1,7 +1,7 @@
 ##some_sorta_bar
 ####A simple bar to display text from a pipe for lightweight window managers.
 
-***e.g.* conky | some_sorta_bar **
+** *e.g.* conky | some_sorta_bar **
 
 ###Text can be aligned in blocks and alignment is set in the text by marking the *start* and *where it is to be split* with an ampersand and L, C or R
 
