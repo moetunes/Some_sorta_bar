@@ -15,8 +15,10 @@
 
 #define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
+// If font isn't found "fixed" will be used
 #define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*"
 #define FONTS_ERROR 1      // 0 to have missing fonts error shown
+// colours are background then eight for the text
 #define colour1 "#003040"  // Background colour
 #define colour2 "#dddddd"  // The rest colour the text
 #define colour3 "#669921"
@@ -47,9 +49,7 @@ static void get_font();
 static void print_text();
 static int wc_size(char *string);
 
-// colours are background then eight for the text
 static const char *defaultcolor[] = { colour1, colour2, colour3, colour4, colour5, colour6, colour7, colour8, colour9, };
-// If font isn't found "fixed" will be used
 static const char *font_list = FONT;
 
 static int count, j, k;
@@ -189,11 +189,7 @@ void print_text() {
     int wsize, n=0;
 
     while(output[count] == '&') {
-        if(output[count+1] == 'L') {
-            count += 2;
-        } else if(output[count+1] == 'C') {
-            count += 2;
-        } else if(output[count+1] == 'R') {
+        if((output[count+1] == 'L') || (output[count+1] == 'C') || (output[count+1] == 'R')) {
             count += 2;
         } else if(output[count+1]-'0' < 10 && output[count+1]-'0' > 0) {
             j = output[count+1]-'0';
@@ -228,11 +224,6 @@ unsigned long getcolor(const char* color) {
         return 1;
     }
     return c.pixel;
-}
-
-void propertynotify(XEvent *e) {
-    XPropertyEvent *ev = &e->xproperty;
-    if(ev->window == root && ev->atom == XA_WM_NAME) update_output();
 }
 
 int main(int argc, char ** argv){
@@ -280,14 +271,10 @@ int main(int argc, char ** argv){
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
     XSelectInput(dis,barwin,ExposureMask);
     XMapRaised(dis, barwin);
-    XSelectInput(dis,root,PropertyChangeMask);
     first_run = 0;
     while(1){
         XNextEvent(dis, &ev);
         switch(ev.type){
-            //case PropertyNotify:
-              //  propertynotify(&ev);
-                //break;
             case Expose:
                 update_output();
                 break;
@@ -298,7 +285,6 @@ int main(int argc, char ** argv){
 
     	if (FD_ISSET(STDIN_FILENO, &readfds))
     	    update_output();
-
     }
 
     return (0);
