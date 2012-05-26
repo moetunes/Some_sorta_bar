@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 400
+#define _XOPEN_SOURCE 600
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -9,11 +9,14 @@
 #include <locale.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/select.h>
+#include <unistd.h>
 #include <wchar.h>
 
 #define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
-#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,*"
+#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*"
+#define FONTS_ERROR 1      // 0 to have missing fonts error shown
 #define colour1 "#003040"  // Background colour
 #define colour2 "#dddddd"  // The rest colour the text
 #define colour3 "#669921"
@@ -49,7 +52,7 @@ static const char *defaultcolor[] = { colour1, colour2, colour3, colour4, colour
 // If font isn't found "fixed" will be used
 static const char *font_list = FONT;
 
-static int i, j, k;
+static int count, j, k;
 static int text_length, c_start, c_end, r_start;
 static int total_w, l_length, c_length, r_length;
 static char output[256] = {"What's going on here then?"};
@@ -73,12 +76,12 @@ void get_font() {
 	missing = NULL;
 	font.fontset = XCreateFontSet(dis, (char *)font_list, &missing, &n, &def);
 	if(missing) {
-		while(n--)
-			fprintf(stderr, ":: missing fontset: %s\n", missing[n]);
+		if(FONTS_ERROR < 1)
+            while(n--)
+                fprintf(stderr, "SSB :: missing fontset: %s\n", missing[n]);
 		XFreeStringList(missing);
 	}
 	if(font.fontset) {
-		//printf("\n\t HAVE FONT\n");
 		XFontStruct **xfonts;
 		char **font_names;
 
@@ -93,46 +96,37 @@ void get_font() {
 		font.width = rect.width;
 	}
 	else {
-		//printf("\t DON'T HAVE FONT\n");
+		fprintf(stderr, "SSB :: %s Not Found\nSSB :: Trying Fixed\n", FONT);
 		if(!(font.font = XLoadQueryFont(dis, font_list))
 		&& !(font.font = XLoadQueryFont(dis, "fixed")))
-			printf("\tSSB :: Error, cannot load font: '%s'\n", font_list);
+			fprintf(stderr, "SSB :: Error, cannot load font: '%s'\n", font_list);
 		font.ascent = font.font->ascent;
 		font.descent = font.font->descent;
 		font.width = XTextWidth(font.font, " ", 1);
 	}
-	font.height = font.ascent + font.descent + 2;
+	font.height = font.ascent + font.descent;
 }
 
 void update_output() {
-    j=2; k=0, i=0;
+    j=2; k=0;
     l_length = 0; c_length = 0; r_length = 0, text_length = 0;
-    int status, n;
-    XTextProperty text_prop;
+    int n;
+    ssize_t num;
     char win_name[256];
 
-    status = XGetWMName(dis, root, &text_prop);
-    if (!status || !text_prop.value || !text_prop.nitems) {
-        first_run += 1;
-        if(first_run > 1) {
-            printf("\033[0;31m Failed to get status output.\n  \033[0:m \n");
-        } else printf("\tSSB :: Must be starting\n");
-    } else {
-        strncpy(win_name, (char *)text_prop.value, 256);
-        while(win_name[text_length] != '\0' && text_length < 256) {
-            output[text_length] = win_name[text_length];
-            ++text_length;
-        }
-        output[text_length] = '\0';
+    if(!(num = read(STDIN_FILENO, output, sizeof(output)))) {
+        fprintf(stderr, "SSB :: FAILED TO READ STDIN!!\n");
+        strncpy(output, "FAILED TO READ STDIN!!", 24);
     }
-    if(text_prop.value) XFree(text_prop.value);
-
+    count = 0;
+    text_length = strlen(output)-1;
+    output[text_length] = '\0';
     total_w = sw/font.width;
     for(k=0;k<total_w;k++) {
-        if(i < text_length-1) {
-            if(output[i] == '&' && output[i+1] == 'C') {
+        if(count < text_length-1) {
+            if(output[count] == '&' && output[count+1] == 'C') {
                 l_length = k;
-                for(n=i;n<text_length;n++) {
+                for(n=count;n<text_length;n++) {
                     if(output[n] == '&' && output[n+1] == 'R') break;
                     while(output[n] == '&') n += 2;
                     win_name[c_length] = output[n];
@@ -142,12 +136,15 @@ void update_output() {
                 c_length = wc_size(win_name);
                 c_start = (total_w/2 - c_length/2);
                 for(k=l_length;k<c_start;k++) {
-                    XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
+                    if(font.fontset)
+                        XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
+                    else
+                        XDrawImageString(dis, barwin, theme[1].gc, font.width, font.fh, " ", 1);
                 }
             }
-            if(output[i] == '&' && output[i+1] == 'R') {
+            if(output[count] == '&' && output[count+1] == 'R') {
                 c_end = k;
-                for(n=i;n<text_length;n++) {
+                for(n=count;n<text_length;n++) {
                     while(output[n] == '&') n += 2;
                     win_name[r_length] = output[n];
                     r_length++;
@@ -156,7 +153,10 @@ void update_output() {
                 r_length = wc_size(win_name);
                 r_start = total_w -r_length;
                 for(k=c_end;k<r_start;k++) {
-                    XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
+                    if(font.fontset)
+                        XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
+                    else
+                        XDrawImageString(dis, barwin, theme[1].gc, font.width, font.fh, " ", 1);
                 }
             }
             print_text();
@@ -172,7 +172,7 @@ void update_output() {
 
 int wc_size(char *string) {
     wchar_t *wp;
-    int len, wlen, wsize, n;
+    int n, len, wlen, wsize;
 
     n = strlen(string);
     len = n * sizeof(wchar_t);
@@ -188,29 +188,32 @@ void print_text() {
     char astring[100];
     int wsize, n=0;
 
-    while(output[i] == '&') {
-        if(output[i+1] == 'L') {
-            i += 2;
-        } else if(output[i+1] == 'C') {
-            i += 2;
-        } else if(output[i+1] == 'R') {
-            i += 2;
-        } else if(output[i+1]-'0' < 10 && output[i+1]-'0' > 0) {
-            j = output[i+1]-'0';
+    while(output[count] == '&') {
+        if(output[count+1] == 'L') {
+            count += 2;
+        } else if(output[count+1] == 'C') {
+            count += 2;
+        } else if(output[count+1] == 'R') {
+            count += 2;
+        } else if(output[count+1]-'0' < 10 && output[count+1]-'0' > 0) {
+            j = output[count+1]-'0';
             if(j > 1 || j < 10) {
                  j--;
             } else  j = 2;
-            i += 2;
+            count += 2;
         } else break;
     }
-    while(output[i] != '&' && output[i] != '\0') {
-        astring[n] = output[i];
-        n++;i++;
+    while(output[count] != '&' && output[count] != '\0') {
+        astring[n] = output[count];
+        n++;count++;
     }
     if(n < 1) return;
     astring[n] = '\0';
     wsize = wc_size(astring);
-    XmbDrawImageString(dis, barwin, font.fontset, theme[j].gc, k*font.width, font.fh, astring, strlen(astring));
+    if(font.fontset)
+        XmbDrawImageString(dis, barwin, font.fontset, theme[j].gc, k*font.width, font.fh, astring, strlen(astring));
+    else
+        XDrawImageString(dis, barwin, theme[1].gc, k*font.width, font.fh, astring, strlen(astring));
     k += wsize-1;
     for(n=0;n<100;n++)
         astring[n] = '\0';
@@ -221,7 +224,7 @@ unsigned long getcolor(const char* color) {
     Colormap map = DefaultColormap(dis,screen);
 
     if(!XAllocNamedColor(dis,map,color,&c,&c)) {
-        printf("\033[0;31mError parsing color!");
+        fprintf(stderr, "\033[0;31mSSB :: Error parsing color!");
         return 1;
     }
     return c.pixel;
@@ -237,9 +240,10 @@ int main(int argc, char ** argv){
     XEvent ev;
     XSetWindowAttributes attr;
 	char *loc;
+	fd_set readfds;
 
     dis = XOpenDisplay(NULL);
-    if (!dis) {fprintf(stderr, "unable to connect to display");return 7;}
+    if (!dis) {fprintf(stderr, "SSB :: unable to connect to display");return 7;}
 
     root = DefaultRootWindow(dis);
     screen = DefaultScreen(dis);
@@ -247,7 +251,13 @@ int main(int argc, char ** argv){
     sh = XDisplayHeight(dis,screen);
     loc = setlocale(LC_ALL, "");
     if (!loc || !strcmp(loc, "C") || !strcmp(loc, "POSIX") || !XSupportsLocale())
-        printf("\tLOCALE FAILED\n");
+        fprintf(stderr, "SSB :: LOCALE FAILED\n");
+    get_font();
+    if(BAR_HEIGHT > font.height) height = BAR_HEIGHT;
+    else height = font.height+2;
+    font.fh = ((height - font.height)/2) + font.ascent;
+    if (TOP_BAR != 0) y = sh - height;
+
     for(i=0;i<9;i++)
         theme[i].color = getcolor(defaultcolor[i]);
     XGCValues values;
@@ -257,13 +267,13 @@ int main(int argc, char ** argv){
         values.foreground = theme[i].color;
         values.line_width = 2;
         values.line_style = LineSolid;
-        theme[i].gc = XCreateGC(dis, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle,&values);
+        if(font.fontset) {
+            theme[i].gc = XCreateGC(dis, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle,&values);
+        } else {
+            values.font = font.font->fid;
+            theme[i].gc = XCreateGC(dis, root, GCBackground|GCForeground|GCLineWidth|GCLineStyle|GCFont,&values);
+        }
     }
-    get_font();
-    if(BAR_HEIGHT > font.height) height = BAR_HEIGHT;
-    else height = font.height;
-    font.fh = ((height - font.height)/2) + font.ascent;
-    if (TOP_BAR != 0) y = sh - height;
 
     barwin = XCreateSimpleWindow(dis, root, 0, y, sw, height, 1, theme[0].color,theme[0].color);
     attr.override_redirect = True;
@@ -275,13 +285,20 @@ int main(int argc, char ** argv){
     while(1){
         XNextEvent(dis, &ev);
         switch(ev.type){
-            case PropertyNotify:
-                propertynotify(&ev);
-                break;
+            //case PropertyNotify:
+              //  propertynotify(&ev);
+                //break;
             case Expose:
                 update_output();
                 break;
         }
+       	FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+        select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL);
+
+    	if (FD_ISSET(STDIN_FILENO, &readfds))
+    	    update_output();
+
     }
 
     return (0);

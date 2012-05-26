@@ -1,18 +1,7 @@
 ##some_sorta_bar
-####A simple bar to display the root window name for lightweight window managers.
+####A simple bar to display text from a pipe for lightweight window managers.
 
-###The root window name can be set from ~/.xinitrc with something like
-
->	conky | while read -r; do xsetroot -name "$REPLY"; done &
-
-or
-
->	  while true ; do
-
->		xsetroot -name "$(awk 'sub(/,/,"") {print $3, $4}' <(acpi -b))"
-
->		sleep 1m
->	  done &
+***e.g.* conky | some_sorta_bar **
 
 ###Text can be aligned in blocks and alignment is set in the text by marking the *start* and *where it is to be split* with an ampersand and L, C or R
 
