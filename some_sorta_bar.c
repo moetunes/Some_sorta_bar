@@ -273,11 +273,13 @@ int main(int argc, char ** argv){
     XMapRaised(dis, barwin);
     first_run = 0;
     while(1){
-        XNextEvent(dis, &ev);
-        switch(ev.type){
-            case Expose:
-                update_output();
-                break;
+        while(XPending(dis)) {
+            XNextEvent(dis, &ev);
+            switch(ev.type){
+                case Expose:
+                    update_output();
+                    break;
+            }
         }
        	FD_ZERO(&readfds);
         FD_SET(STDIN_FILENO, &readfds);
