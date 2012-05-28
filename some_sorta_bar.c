@@ -109,7 +109,7 @@ void get_font() {
 	font.height = font.ascent + font.descent;
 }
 
-void update_output() {
+void update_output(int nc) {
     j=2; k=0;
     l_length = 0; c_length = 0; r_length = 0, text_length = 0;
     unsigned int n, blank_l = 0;
@@ -117,9 +117,11 @@ void update_output() {
     ssize_t num;
     char win_name[256];
 
-    if(!(num = read(STDIN_FILENO, output, sizeof(output)))) {
-        fprintf(stderr, "SSB :: FAILED TO READ STDIN!!\n");
-        strncpy(output, "FAILED TO READ STDIN!!", 24);
+    if(nc < 1) {
+        if(!(num = read(STDIN_FILENO, output, sizeof(output)))) {
+            fprintf(stderr, "SSB :: FAILED TO READ STDIN!!\n");
+            strncpy(output, "FAILED TO READ STDIN!!", 24);
+        }
     }
     count = 0;
     text_length = strlen(output)-1;
@@ -137,7 +139,6 @@ void update_output() {
                 }
                 win_name[c_length] = '\0';
                 c_length = wc_size(win_name);
-                //printf("\t bc=%d\n", bc);
                 c_start = (total_w/2 - c_length/2)+(bc/font.width);
                 for(k=l_length;k<c_start+1;k++) {
                      win_name[blank_l] = ' ';
@@ -177,8 +178,6 @@ void update_output() {
             XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
         }
     }
-    for(k=0;k<256;k++)
-        output[k] = '\0';
     XSync(dis, False);
     return;
 }
@@ -199,7 +198,7 @@ int wc_size(char *string) {
 
 void print_text() {
     char astring[100];
-    unsigned int wsize, n=0;
+    unsigned int wsize, breaker=0, n=0;
 
     while(output[count] == '&') {
         if((output[count+1] == 'L') || (output[count+1] == 'C') || (output[count+1] == 'R')) {
@@ -210,7 +209,14 @@ void print_text() {
                  j--;
             } else  j = 2;
             count += 2;
-        } else break;
+        } else {
+            breaker = 1;
+        }
+        if(breaker == 1) break;
+    }
+    if(output[count] == '&') {
+        astring[n] = output[count];
+        n++;count++;
     }
     while(output[count] != '&' && output[count] != '\0') {
         astring[n] = output[count];
@@ -288,11 +294,11 @@ int main(int argc, char ** argv){
     XMapRaised(dis, barwin);
     first_run = 0;
     while(1){
-        while(XPending(dis)) {
+        while(XPending(dis) != 0) {
             XNextEvent(dis, &ev);
             switch(ev.type){
                 case Expose:
-                    update_output();
+                    update_output(1);
                     break;
             }
         }
@@ -301,7 +307,7 @@ int main(int argc, char ** argv){
         select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL);
 
     	if (FD_ISSET(STDIN_FILENO, &readfds))
-    	    update_output();
+    	    update_output(0);
     }
 
     return (0);
