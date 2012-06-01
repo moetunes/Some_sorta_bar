@@ -1,4 +1,3 @@
-#define _XOPEN_SOURCE 600
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -10,15 +9,15 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
-#include <wchar.h>
 
 #define TOP_BAR 1        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
 #define BAR_WIDTH 0      // 0=Full width or num pixels
 #define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
 // If font isn't found "fixed" will be used
-#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*"
+#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-*-*-*-10-*-*-*-*-*-*-*"
 #define FONTS_ERROR 1      // 0 to have missing fonts error shown
 // colours are background then eight for the text
 #define colour1 "#003040"  // Background colour
@@ -56,7 +55,7 @@ static const char *font_list = FONT;
 
 static unsigned int count, j, k;
 static unsigned int text_length, c_start, c_end, r_start;
-static unsigned int total_w, l_length, c_length, r_length;
+static unsigned int l_length, c_length, r_length;
 static char output[256] = {"What's going on here then?"};
 
 static Display *dis;
@@ -68,20 +67,20 @@ static unsigned int width;
 static unsigned int screen;
 static Window root;
 static Window barwin;
+static Drawable winbar;
 
 static Iammanyfonts font;
 
 void get_font() {
 	char *def, **missing;
 	int i, n;
-	XRectangle rect;
 
 	missing = NULL;
 	font.fontset = XCreateFontSet(dis, (char *)font_list, &missing, &n, &def);
 	if(missing) {
 		if(FONTS_ERROR < 1)
             while(n--)
-                fprintf(stderr, "SSB :: missing fontset: %s\n", missing[n]);
+                fprintf(stderr, ":: snapwm :: missing fontset: %s\n", missing[n]);
 		XFreeStringList(missing);
 	}
 	if(font.fontset) {
@@ -95,13 +94,12 @@ void get_font() {
             if (font.descent < (*xfonts)->descent) font.descent = (*xfonts)->descent;
 			xfonts++;
 		}
-		XmbTextExtents(font.fontset, " ", 1, NULL, &rect);
-		font.width = rect.width;
+		font.width = XmbTextEscapement(font.fontset, " ", 1);
 	} else {
-		fprintf(stderr, "SSB :: Font '%s' Not Found\nSSB :: Trying Font 'Fixed'\n", font_list);
+		fprintf(stderr, ":: snapwm :: Font '%s' Not Found\nSSB :: Trying Font 'Fixed'\n", font_list);
 		if(!(font.font = XLoadQueryFont(dis, font_list))
 		&& !(font.font = XLoadQueryFont(dis, "fixed")))
-			fprintf(stderr, "SSB :: Error, cannot load font: '%s'\n", font_list);
+			fprintf(stderr, ":: snapwm :: Error, cannot load font: '%s'\n", font_list);
 		font.ascent = font.font->ascent;
 		font.descent = font.font->descent;
 		font.width = XTextWidth(font.font, " ", 1);
@@ -124,90 +122,89 @@ void update_output(int nc) {
         }
     }
     count = 0;
-    text_length = strlen(output)-1;
+    text_length = strlen(output);
     //output[text_length] = '\0';
-    total_w = width/font.width;
-    for(k=0;k<total_w;k++) {
-        if(count < text_length) {
+    for(k=0;k<width;k++) {
+        if(count <= text_length) {
             if(output[count] == '&' && output[count+1] == 'C') {
                 l_length = k;
-                for(n=count;n<text_length;n++) {
+                for(n=count;n<=text_length;n++) {
                     if(output[n] == '&' && output[n+1] == 'R') break;
-                    while(output[n] == '&') n += 2;
+                    while(output[n] == '&' && output[n+1]-'0' < 10 && output[n+1]-'0' > 0) n += 2;
                     if(output[n] == '\n' || output[n] == '\r') {
-                        win_name[c_length] = '\0';
+                        c_length--;
                         break;
                     }
                     win_name[c_length] = output[n];
                     c_length++;
                 }
-                win_name[c_length] = '\0';
+                win_name[c_length+1] = '\0';
                 c_length = wc_size(win_name);
-                c_start = (total_w/2 - c_length/2)+(bc/font.width);
-                for(k=l_length;k<c_start+1;k++) {
+                c_start = (width/2 - c_length/2)+bc;
+                for(k=l_length;k<c_start;k+=font.width) {
                      win_name[blank_l] = ' ';
                      blank_l++;
                 }
-                k--;
                 win_name[blank_l] = '\0';
                 if(font.fontset)
-                    XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, l_length*font.width, font.fh, win_name, blank_l);
+                    XmbDrawImageString(dis, winbar, font.fontset, theme[1].gc, l_length, font.fh, win_name, blank_l);
                 else
-                    XDrawImageString(dis, barwin, theme[1].gc, l_length*font.width, font.fh, win_name, blank_l);
+                    XDrawImageString(dis, winbar, theme[1].gc, l_length, font.fh, win_name, blank_l);
             }
             if(output[count] == '&' && output[count+1] == 'R') {
                 blank_l = 0;
                 c_end = k;
-                for(n=count;n<text_length;n++) {
+                for(n=count;n<=text_length;n++) {
                     while(output[n] == '&') n += 2;
                     if(output[n] == '\n' || output[n] == '\r') {
-                        win_name[r_length] = '\0';
+                        r_length--;
                         break;
                     }
                     win_name[r_length] = output[n];
                     r_length++;
                 }
-                win_name[r_length] = '\0';
+                win_name[r_length+1] = '\0';
                 r_length = wc_size(win_name);
-                r_start = total_w - r_length;
-                for(k=c_end;k<r_start+1;k++) {
+                r_start = width - r_length-1;
+                for(k=c_end;k<r_start-1;k+=font.width) {
                      win_name[blank_l] = ' ';
                      blank_l++;
                 }
                 k--;
                 win_name[blank_l] = '\0';
                 if(font.fontset)
-                    XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, c_end*font.width, font.fh, win_name, blank_l);
+                    XmbDrawImageString(dis, winbar, font.fontset, theme[1].gc, c_end, font.fh, win_name, blank_l);
                 else
-                    XDrawImageString(dis, barwin, theme[1].gc, c_end*font.width, font.fh, win_name, blank_l);
+                    XDrawImageString(dis, winbar, theme[1].gc, c_end, font.fh, win_name, blank_l);
+                //k += blank_l;
             }
             print_text();
+            //printf("k=%d,", k);
         } else {
-            XmbDrawImageString(dis, barwin, font.fontset, theme[1].gc, k*font.width, font.fh, " ", 1);
+            if(font.fontset)
+                XmbDrawImageString(dis, winbar, font.fontset, theme[1].gc, k, font.fh, " ", 1);
+            else
+                XDrawImageString(dis, winbar, theme[1].gc, k, font.fh, " ", 1);
+            //k =+ font.width;
         }
     }
-    //printf("\n");
+    XCopyArea(dis, winbar, barwin, theme[1].gc, 0, 0, width, height, 1, 0);
     XSync(dis, False);
     return;
 }
 
 int wc_size(char *string) {
-    wchar_t *wp;
-    int n, len, wlen, wsize;
+    int num;
+    XRectangle rect;
 
-    n = strlen(string);
-    len = n * sizeof(wchar_t);
-    wp = (wchar_t *)malloc(1+len);
-    wlen = mbstowcs(wp, string, len);
-    wsize = wcswidth(wp, wlen);
-    if(wsize < 1) wsize = n;
-    //printf(" astr=%s,wsz=%d", string, wsize);
-    free(wp);
-    return wsize;
+    num = strlen(string);
+    XmbTextExtents(font.fontset, string, num, NULL, &rect);
+    //printf(", num=%d,wsize=%d,", num, rect.width);
+    return rect.width;
 }
 
 void print_text() {
-    char astring[100];
+    char astring[256];
     unsigned int wsize, breaker=0, n=0;
 
     while(output[count] == '&') {
@@ -228,19 +225,23 @@ void print_text() {
         astring[n] = output[count];
         n++;count++;
     }
-    while(output[count] != '&' && output[count] != '\0') {
+    while(output[count] != '&' && output[count] != '\0' && output[count] != '\n' && output[count] != '\r') {
         astring[n] = output[count];
         n++;count++;
     }
     if(n < 1) return;
     astring[n] = '\0';
     wsize = wc_size(astring);
+    if((k+wsize) > width) {
+        k = width;
+        return;
+    }
     if(font.fontset)
-        XmbDrawImageString(dis, barwin, font.fontset, theme[j].gc, k*font.width, font.fh, astring, strlen(astring));
+        XmbDrawImageString(dis, winbar, font.fontset, theme[j].gc, k, font.fh, astring, strlen(astring));
     else
-        XDrawImageString(dis, barwin, theme[1].gc, k*font.width, font.fh, astring, strlen(astring));
+        XDrawImageString(dis, winbar, theme[1].gc, k, font.fh, astring, strlen(astring));
     k += wsize-1;
-    for(n=0;n<100;n++)
+    for(n=0;n<256;n++)
         astring[n] = '\0';
 }
 
@@ -261,6 +262,7 @@ int main(int argc, char ** argv){
     XSetWindowAttributes attr;
 	char *loc;
 	fd_set readfds;
+    struct timeval tv;
 
     dis = XOpenDisplay(NULL);
     if (!dis) {fprintf(stderr, "SSB :: unable to connect to display");return 7;}
@@ -276,15 +278,15 @@ int main(int argc, char ** argv){
     if(BAR_HEIGHT > font.height) height = BAR_HEIGHT;
     else height = font.height+2;
     font.fh = ((height - font.height)/2) + font.ascent;
-    if(BAR_WIDTH == 0) width = sw;
-    else width = BAR_WIDTH;
-    if (TOP_BAR != 0) y = sh - height;
+    if(BAR_WIDTH == 0) width = sw-2;  // Take off border width
+    else width = BAR_WIDTH-2;
+    if (TOP_BAR != 0) y = sh - height-2; // Take off border width
 
     for(i=0;i<9;i++)
         theme[i].color = getcolor(defaultcolor[i]);
     XGCValues values;
 
-    for(i=1;i<9;i++) {
+    for(i=0;i<9;i++) {
         values.background = theme[0].color;
         values.foreground = theme[i].color;
         values.line_width = 2;
@@ -297,6 +299,8 @@ int main(int argc, char ** argv){
         }
     }
 
+    winbar = XCreatePixmap(dis, root, width, height, DefaultDepth(dis, screen));
+    XFillRectangle(dis, winbar, theme[0].gc, 0, 0, width, height);
     barwin = XCreateSimpleWindow(dis, root, 0, y, width, height, 1, theme[0].color,theme[0].color);
     attr.override_redirect = True;
     XChangeWindowAttributes(dis, barwin, CWOverrideRedirect, &attr);
@@ -304,20 +308,23 @@ int main(int argc, char ** argv){
     XMapRaised(dis, barwin);
     first_run = 0;
     while(1){
+       	tv.tv_sec = 0;
+       	tv.tv_usec = 200000;
+       	FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+        select(STDIN_FILENO+1, &readfds, NULL, NULL, &tv);
+
+    	if (FD_ISSET(STDIN_FILENO, &readfds))
+    	    update_output(0);
         while(XPending(dis) != 0) {
             XNextEvent(dis, &ev);
             switch(ev.type){
                 case Expose:
-                    update_output(1);
+                    XCopyArea(dis, winbar, barwin, theme[1].gc, 0, 0, width, height, 1, 0);
+                    XSync(dis, False);
                     break;
             }
         }
-       	FD_ZERO(&readfds);
-        FD_SET(STDIN_FILENO, &readfds);
-        select(STDIN_FILENO+1, &readfds, NULL, NULL, NULL);
-
-    	if (FD_ISSET(STDIN_FILENO, &readfds))
-    	    update_output(0);
     }
 
     return (0);
