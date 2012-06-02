@@ -17,7 +17,8 @@
 #define BAR_WIDTH 0      // 0=Full width or num pixels
 #define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
 // If font isn't found "fixed" will be used
-#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-*-*-*-10-*-*-*-*-*-*-*"
+//#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-r-*-*-12-*-*-*-*-*-*-*"
+#define FONT ""
 #define FONTS_ERROR 1      // 0 to have missing fonts error shown
 // colours are background then eight for the text
 #define colour1 "#003040"  // Background colour
@@ -76,7 +77,8 @@ void get_font() {
 	int i, n;
 
 	missing = NULL;
-	font.fontset = XCreateFontSet(dis, (char *)font_list, &missing, &n, &def);
+	if(strlen(font_list) > 0)
+	    font.fontset = XCreateFontSet(dis, (char *)font_list, &missing, &n, &def);
 	if(missing) {
 		if(FONTS_ERROR < 1)
             while(n--)
@@ -198,9 +200,12 @@ int wc_size(char *string) {
     XRectangle rect;
 
     num = strlen(string);
-    XmbTextExtents(font.fontset, string, num, NULL, &rect);
-    //printf(", num=%d,wsize=%d,", num, rect.width);
-    return rect.width;
+    if(font.fontset) {
+        XmbTextExtents(font.fontset, string, num, NULL, &rect);
+        return rect.width;
+    } else {
+        return XTextWidth(font.font, string, num);
+    }
 }
 
 void print_text() {
