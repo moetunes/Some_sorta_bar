@@ -82,7 +82,7 @@ void get_font() {
 	if(missing) {
 		if(FONTS_ERROR < 1)
             while(n--)
-                fprintf(stderr, ":: snapwm :: missing fontset: %s\n", missing[n]);
+                fprintf(stderr, ":: SSB :: missing fontset: %s\n", missing[n]);
 		XFreeStringList(missing);
 	}
 	if(font.fontset) {
@@ -98,10 +98,10 @@ void get_font() {
 		}
 		font.width = XmbTextEscapement(font.fontset, " ", 1);
 	} else {
-		fprintf(stderr, ":: snapwm :: Font '%s' Not Found\nSSB :: Trying Font 'Fixed'\n", font_list);
+		fprintf(stderr, ":: SSB :: Font '%s' Not Found\n:: SSB :: Trying Font 'Fixed'\n", font_list);
 		if(!(font.font = XLoadQueryFont(dis, font_list))
 		&& !(font.font = XLoadQueryFont(dis, "fixed")))
-			fprintf(stderr, ":: snapwm :: Error, cannot load font: '%s'\n", font_list);
+			fprintf(stderr, ":: SSB :: Error, cannot load font: '%s'\n", font_list);
 		font.ascent = font.font->ascent;
 		font.descent = font.font->descent;
 		font.width = XTextWidth(font.font, " ", 1);
@@ -244,7 +244,7 @@ void print_text() {
     if(font.fontset)
         XmbDrawImageString(dis, winbar, font.fontset, theme[j].gc, k, font.fh, astring, strlen(astring));
     else
-        XDrawImageString(dis, winbar, theme[1].gc, k, font.fh, astring, strlen(astring));
+        XDrawImageString(dis, winbar, theme[j].gc, k, font.fh, astring, strlen(astring));
     k += wsize-1;
     for(n=0;n<256;n++)
         astring[n] = '\0';
