@@ -17,8 +17,7 @@
 #define BAR_WIDTH 0      // 0=Full width or num pixels
 #define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
 // If font isn't found "fixed" will be used
-//#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-r-*-*-12-*-*-*-*-*-*-*"
-#define FONT ""
+#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-terminus-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-r-*-*-12-*-*-*-*-*-*-*"
 #define FONTS_ERROR 1      // 0 to have missing fonts error shown
 // colours are background then eight for the text
 #define colour1 "#003040"  // Background colour
@@ -191,6 +190,8 @@ void update_output(int nc) {
         }
     }
     XCopyArea(dis, winbar, barwin, theme[1].gc, 0, 0, width, height, 1, 0);
+    for(n=0;n<256;n++)
+        output[n] = '\0';
     XSync(dis, False);
     return;
 }
