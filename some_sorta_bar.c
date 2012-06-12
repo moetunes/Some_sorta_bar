@@ -12,7 +12,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
+#define TOP_BAR 1        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
 #define BAR_WIDTH 0      // 0=Full width or use num pixels
 #define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
@@ -111,7 +111,7 @@ void get_font() {
 void update_output(int nc) {
     j=2; k=0;
     l_length = 0; c_length = 0; r_length = 0, text_length = 0;
-    unsigned int n, blank_l = 0;
+    unsigned int n;
     int bc = BAR_CENTER;
     ssize_t num;
     char win_name[256];
@@ -152,7 +152,6 @@ void update_output(int nc) {
                 for(k=l_length;k<c_start;k+=font.width);
             }
             if(output[count] == '&' && output[count+1] == 'R') {
-                blank_l = 0;
                 count += 2;
                 c_end = k;
                 for(n=count;n<=text_length;n++) {
