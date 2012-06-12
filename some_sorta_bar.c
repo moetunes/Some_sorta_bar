@@ -127,7 +127,9 @@ void update_output(int nc) {
     //output[text_length] = '\0';
     for(k=0;k<width;k++) {
         if(count <= text_length) {
+            if(output[count] == '&' && output[count+1] == 'L') count +=2;
             if(output[count] == '&' && output[count+1] == 'C') {
+                count += 2;
                 l_length = k;
                 for(n=count;n<=text_length;n++) {
                     if(output[n] == '&' && output[n+1] == 'R') break;
@@ -154,6 +156,7 @@ void update_output(int nc) {
             }
             if(output[count] == '&' && output[count+1] == 'R') {
                 blank_l = 0;
+                count += 2;
                 c_end = k;
                 for(n=count;n<=text_length;n++) {
                     while(output[n] == '&') n += 2;
@@ -215,7 +218,7 @@ void print_text() {
 
     while(output[count] == '&') {
         if((output[count+1] == 'L') || (output[count+1] == 'C') || (output[count+1] == 'R')) {
-            count += 2;
+            return;
         } else if(output[count+1]-'0' < 10 && output[count+1]-'0' > 0) {
             j = output[count+1]-'0';
             if(j > 1 || j < 10) {
