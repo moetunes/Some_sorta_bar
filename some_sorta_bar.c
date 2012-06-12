@@ -14,7 +14,7 @@
 
 #define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
-#define BAR_WIDTH 0      // 0=Full width or num pixels
+#define BAR_WIDTH 0      // 0=Full width or use num pixels
 #define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
 // If font isn't found "fixed" will be used
 #define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-r-*-*-12-*-*-*-*-*-*-*"
@@ -116,6 +116,8 @@ void update_output(int nc) {
     ssize_t num;
     char win_name[256];
 
+    for(k=0;k<257;k++)
+        output[k] = '\0';
     if(nc < 1) {
         if(!(num = read(STDIN_FILENO, output, sizeof(output)))) {
             fprintf(stderr, "SSB :: FAILED TO READ STDIN!!\n");
@@ -128,6 +130,10 @@ void update_output(int nc) {
     XFillRectangle(dis, winbar, theme[0].gc, 0, 0, width, height);
     for(k=0;k<width;k++) {
         if(count <= text_length) {
+            if(output[count] == '\n' || output[count] == '\r') {
+                //printf("Found NewLine");
+                count += 1;
+            }
             if(output[count] == '&' && output[count+1] == 'L') count +=2;
             if(output[count] == '&' && output[count+1] == 'C') {
                 count += 2;
@@ -170,7 +176,7 @@ void update_output(int nc) {
                 }
                 win_name[r_length+1] = '\0';
                 r_length = wc_size(win_name);
-                r_start = width - r_length-1;
+                r_start = width - r_length-(1*font.width);
                 for(k=c_end;k<r_start-1;k+=font.width) {
                      win_name[blank_l] = ' ';
                      blank_l++;
@@ -241,6 +247,7 @@ void print_text() {
     }
     if(n < 1) return;
     astring[n] = '\0';
+    //printf("ASTR=%s\n", astring);
     wsize = wc_size(astring);
     if((k+wsize) > width) {
         k = width;
