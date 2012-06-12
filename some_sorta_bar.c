@@ -125,6 +125,7 @@ void update_output(int nc) {
     count = 0;
     text_length = strlen(output);
     //output[text_length] = '\0';
+    XFillRectangle(dis, winbar, theme[0].gc, 0, 0, width, height);
     for(k=0;k<width;k++) {
         if(count <= text_length) {
             if(output[count] == '&' && output[count+1] == 'L') count +=2;
