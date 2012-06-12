@@ -126,12 +126,10 @@ void update_output(int nc) {
     }
     count = 0;
     text_length = strlen(output);
-    //output[text_length] = '\0';
     XFillRectangle(dis, winbar, theme[0].gc, 0, 0, width, height);
     for(k=0;k<width;k++) {
         if(count <= text_length) {
             if(output[count] == '\n' || output[count] == '\r') {
-                //printf("Found NewLine");
                 count += 1;
             }
             if(output[count] == '&' && output[count+1] == 'L') count +=2;
@@ -151,15 +149,7 @@ void update_output(int nc) {
                 win_name[c_length+1] = '\0';
                 c_length = wc_size(win_name);
                 c_start = (width/2 - c_length/2)+bc;
-                for(k=l_length;k<c_start;k+=font.width) {
-                     win_name[blank_l] = ' ';
-                     blank_l++;
-                }
-                win_name[blank_l] = '\0';
-                if(font.fontset)
-                    XmbDrawImageString(dis, winbar, font.fontset, theme[1].gc, l_length, font.fh, win_name, blank_l);
-                else
-                    XDrawImageString(dis, winbar, theme[1].gc, l_length, font.fh, win_name, blank_l);
+                for(k=l_length;k<c_start;k+=font.width);
             }
             if(output[count] == '&' && output[count+1] == 'R') {
                 blank_l = 0;
@@ -177,31 +167,19 @@ void update_output(int nc) {
                 win_name[r_length+1] = '\0';
                 r_length = wc_size(win_name);
                 r_start = width - r_length-(1*font.width);
-                for(k=c_end;k<r_start-1;k+=font.width) {
-                     win_name[blank_l] = ' ';
-                     blank_l++;
-                }
-                k--;
-                win_name[blank_l] = '\0';
-                if(font.fontset)
-                    XmbDrawImageString(dis, winbar, font.fontset, theme[1].gc, c_end, font.fh, win_name, blank_l);
-                else
-                    XDrawImageString(dis, winbar, theme[1].gc, c_end, font.fh, win_name, blank_l);
-                //k += blank_l;
+                for(k=c_end;k<r_start-1;k+=font.width);
             }
             print_text();
             //printf("k=%d,", k);
         } else {
             if(font.fontset)
-                XmbDrawImageString(dis, winbar, font.fontset, theme[1].gc, k, font.fh, " ", 1);
+                XmbDrawString(dis, winbar, font.fontset, theme[1].gc, k, font.fh, " ", 1);
             else
-                XDrawImageString(dis, winbar, theme[1].gc, k, font.fh, " ", 1);
+                XDrawString(dis, winbar, theme[1].gc, k, font.fh, " ", 1);
             //k =+ font.width;
         }
     }
     XCopyArea(dis, winbar, barwin, theme[1].gc, 0, 0, width, height, 1, 0);
-    for(n=0;n<256;n++)
-        output[n] = '\0';
     XSync(dis, False);
     return;
 }
