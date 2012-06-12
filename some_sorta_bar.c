@@ -12,23 +12,23 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define TOP_BAR 1        // 0=Bar at top, 1=Bar at bottom
+#define TOP_BAR 0        // 0=Bar at top, 1=Bar at bottom
 #define BAR_HEIGHT 16
 #define BAR_WIDTH 0      // 0=Full width or num pixels
 #define BAR_CENTER 0     // 0=Screen center or pos/neg to move right/left
 // If font isn't found "fixed" will be used
-#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-terminus-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-r-*-*-12-*-*-*-*-*-*-*"
+#define FONT "-*-terminusmod.icons-medium-r-*-*-12-*-*-*-*-*-*-*,-*-stlarch-medium-r-*-*-12-*-*-*-*-*-*-*"
 #define FONTS_ERROR 1      // 0 to have missing fonts error shown
 // colours are background then eight for the text
-#define colour1 "#003040"  // Background colour
-#define colour2 "#dddddd"  // The rest colour the text
+#define colour1 "#003040"  // Background colour. The rest colour the text
+#define colour2 "#dddddd"  // &2
 #define colour3 "#669921"
 #define colour4 "#00dd99"
 #define colour5 "#ffffff"
 #define colour6 "#ffff00"
 #define colour7 "#ff00ff"
 #define colour8 "#f0f0f0"
-#define colour9 "#00ff00"
+#define colour9 "#ff0000"  // &9
 
 typedef struct {
     unsigned long color;
