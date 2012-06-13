@@ -165,17 +165,15 @@ void update_output(int nc) {
                 }
                 win_name[r_length+1] = '\0';
                 r_length = wc_size(win_name);
-                r_start = width - r_length-(1*font.width);
+                r_start = width - r_length-font.width;
                 for(k=c_end;k<r_start-1;k+=font.width);
             }
             print_text();
-            //printf("k=%d,", k);
         } else {
             if(font.fontset)
                 XmbDrawString(dis, winbar, font.fontset, theme[1].gc, k, font.fh, " ", 1);
             else
                 XDrawString(dis, winbar, theme[1].gc, k, font.fh, " ", 1);
-            //k =+ font.width;
         }
     }
     XCopyArea(dis, winbar, barwin, theme[1].gc, 0, 0, width, height, 1, 0);
@@ -224,7 +222,6 @@ void print_text() {
     }
     if(n < 1) return;
     astring[n] = '\0';
-    //printf("ASTR=%s\n", astring);
     wsize = wc_size(astring);
     if((k+wsize) > width) {
         k = width;
