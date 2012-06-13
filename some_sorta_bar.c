@@ -48,7 +48,7 @@ typedef struct {
 
 static void get_font();
 static void print_text();
-static int wc_size(char *string);
+static int wc_size(char *string, int num);
 
 static const char *defaultcolor[] = { colour1, colour2, colour3, colour4, colour5, colour6, colour7, colour8, colour9, };
 static const char *font_list = FONT;
@@ -147,7 +147,7 @@ void update_output(int nc) {
                     c_length++;
                 }
                 win_name[c_length+1] = '\0';
-                c_length = wc_size(win_name);
+                c_length = wc_size(win_name, c_length+1);
                 c_start = (width/2 - c_length/2)+bc;
                 for(k=l_length;k<c_start;k+=font.width);
             }
@@ -164,7 +164,7 @@ void update_output(int nc) {
                     r_length++;
                 }
                 win_name[r_length+1] = '\0';
-                r_length = wc_size(win_name);
+                r_length = wc_size(win_name, r_length+1);
                 r_start = width - r_length-font.width;
                 for(k=c_end;k<r_start-1;k+=font.width);
             }
@@ -176,11 +176,9 @@ void update_output(int nc) {
     return;
 }
 
-int wc_size(char *string) {
-    int num;
+int wc_size(char *string, int num) {
     XRectangle rect;
 
-    num = strlen(string);
     if(font.fontset) {
         XmbTextExtents(font.fontset, string, num, NULL, &rect);
         return rect.width;
@@ -217,7 +215,7 @@ void print_text() {
     }
     if(n < 1) return;
     astring[n] = '\0';
-    wsize = wc_size(astring);
+    wsize = wc_size(astring, n);
     if((k+wsize) > width) {
         k = width;
         return;
