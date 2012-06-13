@@ -155,7 +155,7 @@ void update_output(int nc) {
                 count += 2;
                 c_end = k;
                 for(n=count;n<=text_length;n++) {
-                    while(output[n] == '&') n += 2;
+                    while(output[n] == '&' && output[n+1]-'0' < 10 && output[n+1]-'0' > 0) n += 2;
                     if(output[n] == '\n' || output[n] == '\r') {
                         r_length--;
                         break;
@@ -169,11 +169,6 @@ void update_output(int nc) {
                 for(k=c_end;k<r_start-1;k+=font.width);
             }
             print_text();
-        } else {
-            if(font.fontset)
-                XmbDrawString(dis, winbar, font.fontset, theme[1].gc, k, font.fh, " ", 1);
-            else
-                XDrawString(dis, winbar, theme[1].gc, k, font.fh, " ", 1);
         }
     }
     XCopyArea(dis, winbar, barwin, theme[1].gc, 0, 0, width, height, 1, 0);

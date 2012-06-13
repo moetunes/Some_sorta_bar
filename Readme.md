@@ -3,7 +3,7 @@
 
 *e.g.* conky | some_sorta_bar
 
-###Text can be aligned in blocks and alignment is set in the text by marking the *start* and *where it is to be split* with an ampersand and L, C or R
+###Text can be aligned in blocks and alignment is set in the text by marking the text *where it is to be split* with an ampersand and C or R to have the text centered or right aligned
 
 *e.g.* To have the text right aligned
 
@@ -18,7 +18,7 @@ Text defaults to left alignment if not marked with either *&C* or *&R*
 
 Centered text can be offset 
 
-**#define BAR_CENTER -100     // 0=Screen center or pos/neg to move right/left**
+**#define BAR_CENTER -100     // 0=Screen center or pos/neg pixels to move right/left**
 
 ###The nine colours are set at compile time so edit them to suit.
 
