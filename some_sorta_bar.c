@@ -259,11 +259,9 @@ int main(int argc, char ** argv){
     if (!loc || !strcmp(loc, "C") || !strcmp(loc, "POSIX") || !XSupportsLocale())
         fprintf(stderr, "SSB :: LOCALE FAILED\n");
     get_font();
-    if(BAR_HEIGHT > font.height) height = BAR_HEIGHT;
-    else height = font.height+2;
+    height = (BAR_HEIGHT > font.height) ? BAR_HEIGHT : font.height+2;
     font.fh = ((height - font.height)/2) + font.ascent;
-    if(BAR_WIDTH == 0) width = sw-2;  // Take off border width
-    else width = BAR_WIDTH-2;
+    width = (BAR_WIDTH == 0) ? sw-2 : BAR_WIDTH-2; // Take off border width
     if (TOP_BAR != 0) y = sh - height-2; // Take off border width
 
     for(i=0;i<9;i++)
@@ -291,12 +289,14 @@ int main(int argc, char ** argv){
     XSelectInput(dis,barwin,ExposureMask);
     XMapRaised(dis, barwin);
     first_run = 0;
+    int x11_fd = ConnectionNumber(dis);
     while(1){
        	tv.tv_sec = 0;
        	tv.tv_usec = 200000;
        	FD_ZERO(&readfds);
+        FD_SET(x11_fd, &readfds);
         FD_SET(STDIN_FILENO, &readfds);
-        select(STDIN_FILENO+1, &readfds, NULL, NULL, &tv);
+        select(x11_fd+1, &readfds, NULL, NULL, &tv);
 
     	if (FD_ISSET(STDIN_FILENO, &readfds))
     	    update_output(0);
