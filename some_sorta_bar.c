@@ -221,9 +221,9 @@ void print_text() {
         return;
     }
     if(font.fontset)
-        XmbDrawImageString(dis, winbar, font.fontset, theme[j].gc, k, font.fh, astring, strlen(astring));
+        XmbDrawImageString(dis, winbar, font.fontset, theme[j].gc, k, font.fh, astring, n);
     else
-        XDrawImageString(dis, winbar, theme[j].gc, k, font.fh, astring, strlen(astring));
+        XDrawImageString(dis, winbar, theme[j].gc, k, font.fh, astring, n);
     k += wsize-1;
     for(n=0;n<256;n++)
         astring[n] = '\0';
