@@ -165,7 +165,7 @@ void update_output(int nc) {
                 }
                 win_name[r_length+1] = '\0';
                 r_length = wc_size(win_name, r_length+1);
-                r_start = width - r_length-font.width;
+                r_start = width - r_length;
                 k = r_start;
             }
             print_text();
