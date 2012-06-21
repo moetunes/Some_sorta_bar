@@ -149,7 +149,7 @@ void update_output(int nc) {
                 win_name[c_length+1] = '\0';
                 c_length = wc_size(win_name, c_length+1);
                 c_start = (width/2 - c_length/2)+bc;
-                for(k=l_length;k<c_start;k+=font.width);
+                k = c_start;
             }
             if(output[count] == '&' && output[count+1] == 'R') {
                 count += 2;
@@ -166,7 +166,7 @@ void update_output(int nc) {
                 win_name[r_length+1] = '\0';
                 r_length = wc_size(win_name, r_length+1);
                 r_start = width - r_length-font.width;
-                for(k=c_end;k<r_start-1;k+=font.width);
+                k = r_start;
             }
             print_text();
         }
