@@ -290,9 +290,9 @@ int main(int argc, char ** argv){
     XMapRaised(dis, barwin);
     first_run = 0;
     int x11_fd = ConnectionNumber(dis);
-    FD_SET(x11_fd, &readfds);
     while(1){
        	FD_ZERO(&readfds);
+        FD_SET(x11_fd, &readfds);
         FD_SET(STDIN_FILENO, &readfds);
         tv.tv_sec = 0;
         tv.tv_usec = 200000;
