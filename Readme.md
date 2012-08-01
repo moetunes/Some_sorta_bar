@@ -20,15 +20,18 @@ Centered text can be offset
 
 **#define BAR_CENTER -100     // 0=Screen center or pos/neg pixels to move right/left**
 
-###The nine colours are set at compile time so edit them to suit.
+###The ten colours are set at compile time so edit them to suit.
 
-The first colour is the background and the second to ninth are for the text.
+The first colour is the default background and the second is the default for the text.
+All colours can be used for both the background and the text.
 
-To change the colour mark the text with an ampersand and the desired colour number.
+To change the text colour mark the text with an ampersand and the desired colour number.
 
-*e.g.* To use the second and last colours, mark the text like -
+To change the background mark the text with an ampersand, capital B and the desired colour number.
 
-**&R*&2* some text *&9* some more text**
+*e.g.* To use the second and last colours and the third colour for background, mark the text like -
+
+**&R&B2*&1* some text *&9* some more text**
 
 Whether the bar is at *top or bottom* is set at compile time.
 
